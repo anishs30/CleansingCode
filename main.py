@@ -1,16 +1,23 @@
-# This is a sample Python script.
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, count, when
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+spark = SparkSession.builder.appName('Spark example').getOrCreate()
 
+patient_df = spark.read.options(header='True', inferSchema='True', delimiter=',') \
+    .csv("s3://datatakeo/capstoneProject/Patient_records.csv")
+has_nulls = patient_df.dropna().count() < patient_df.count()
+if has_nulls:
+    print("The dataset has null values.")
+else:
+    print("The dataset does not have null values.")
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-    print("Hello")
+patient_null_counts = patient_df.select([count(when(col(c).isNull(), c)).alias(c) for c in patient_df.columns]).show()
+patient_df.fillna('NA', subset=['patient_name', 'patient_phone']).show()
+patient_has_duplicates = patient_df.dropDuplicates().count() < patient_df.count()
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+# If there are duplicates, drop them
+if patient_has_duplicates:
+    patient_no_duplicates = patient_df.dropDuplicates()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+else:
+    patient_no_duplicates = patient_df
