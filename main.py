@@ -3,7 +3,12 @@ from pyspark.sql.functions import col, count, when
 
 spark = SparkSession.builder.appName('Spark example').getOrCreate()
 
-
+# Checking null values
+# has_nulls = patient_df.dropna().count() < patient_df.count()
+# if has_nulls:
+#     print("The dataset has null values.")
+# else:
+#     print("The dataset does not have null values.")
 
 # Patient_record
 patient_df = spark.read.options(header='True', inferSchema='True', delimiter=',') \
@@ -61,4 +66,8 @@ if claim_has_duplicates:
 
 else:
     claim_final = claim_df
+
+
+
+
 
